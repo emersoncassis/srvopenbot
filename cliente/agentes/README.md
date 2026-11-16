@@ -64,6 +64,14 @@ os **bots de integração** de Instagram, WhatsApp, TikTok, YouTube e LinkedIn (
 navegador do OpenBot, com o login feito pela pessoa). Montar: `EQUIPE=equipe_ti python montar.py fontes equipe-ti.zip`.
 Para completar um OpenBot que já tem parte da equipe: `SO_AGENTES=chave1,chave2` monta só esses agentes, sem canais.
 
+## Equipe de redes sociais (`equipe-social.zip`)
+
+11 agentes no canal **Redes Sociais**, para um OpenBot só de postagem: Head de Social Media (agente principal),
+Estrategista de Conteúdo, Copywriter, Social Instagram e TikTok, Social YouTube, Designer de Peças, Editor de Vídeo,
+Gestor de Comunidade e os bots de integração de Instagram, TikTok e YouTube. Reaproveita os agentes das outras
+equipes com a cadeia ajustada. O nome do dono do OpenBot fica em `DONO` no arquivo da equipe.
+Montar: `EQUIPE=equipe_social python montar.py fontes equipe-social.zip`.
+
 ## Publicar na Loja do OpenBot (`publicar_loja.py`)
 
 Publica um pacote na Loja do servidor de contas próprio (skills e agentes, já aprovados), com uma conta de autor

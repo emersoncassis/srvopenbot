@@ -13,6 +13,7 @@ _eq = importlib.import_module(os.environ.get("EQUIPE", "equipe"))
 AREAS, EQUIPE, ROTINAS, MEMORIAS_COMUNS, TZ = _eq.AREAS, _eq.EQUIPE, _eq.ROTINAS, _eq.MEMORIAS_COMUNS, _eq.TZ
 REGRAS_EXTRAS = getattr(_eq, "REGRAS_EXTRAS", [])
 CANAL_DIRETORIA = getattr(_eq, "CANAL_DIRETORIA", True)
+DONO = getattr(_eq, "DONO", "Rafael")  # a pessoa que fala com o agente principal
 
 # SO_AGENTES=chave1,chave2: monta só esses agentes (para completar um OpenBot que já tem o resto da equipe)
 SO_AGENTES = set(filter(None, os.environ.get("SO_AGENTES", "").split(",")))
@@ -125,10 +126,10 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
     # Instruções completas (cadeia de comando + personas)
     linhas = ["# %s — %s" % (nome, cargo), "", "## Seu papel", foco, "", "## Cadeia de comando"]
     if chefe:
-        linhas.append("- Você responde a **%s**. Entregue seus resultados a ele (send_message), não direto ao Rafael, "
-                      "a menos que o Rafael fale com você." % nomes[chefe])
+        linhas.append("- Você responde a **%s**. Entregue seus resultados a ele (send_message), não direto ao %s, "
+                      "a menos que o %s fale com você." % (nomes[chefe], DONO, DONO))
     else:
-        linhas.append("- Você é o agente principal: o **Rafael** fala com você. Você coordena os gerentes abaixo e devolve a ele resumos e decisões.")
+        linhas.append("- Você é o agente principal: o **%s** fala com você. Você coordena a equipe abaixo e devolve a ele resumos e decisões." % DONO)
     if key in subordinados:
         linhas.append("- Você comanda: %s. Delegue a eles o que é da área de cada um (openbot.list_agents e send_message), "
                       "cobre o resultado e consolide antes de entregar." % ", ".join("**%s**" % nomes[s] for s in subordinados[key]))
@@ -138,7 +139,7 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
                "## Regras", *["- " + m for m in MEMORIAS_COMUNS],
                *["- " + r for r in REGRAS_EXTRAS],
                "- Use as suas skills (pasta skills) como método de trabalho. Muitas estão em inglês; responda em português.",
-               "- Contexto da empresa (produto, público, metas, tom de voz): pergunte ao Diretor Comercial ou ao Rafael e salve como memória.", ""]
+               "- Contexto da empresa (produto, público, metas, tom de voz): pergunte ao seu gestor ou ao %s e salve como memória." % DONO, ""]
     for item in personas:
         fp, rel = item if isinstance(item, tuple) else ("ag", item)
         repo_p, _, slug_p, lic_p = FONTES[fp]
@@ -151,7 +152,7 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
         f.write("\n".join(linhas))
     # Descrição curta (<= 2000)
     desc = "%s. %s " % (cargo, foco)
-    desc += ("Você responde a %s. " % nomes[chefe]) if chefe else "Você é o agente principal e fala com o Rafael. "
+    desc += ("Você responde a %s. " % nomes[chefe]) if chefe else "Você é o agente principal e fala com o %s. " % DONO
     if key in subordinados:
         desc += "Você comanda: %s. " % ", ".join(nomes[s] for s in subordinados[key])
     desc += ("Antes de qualquer coisa, leia imported/INSTRUCTIONS.md (cadeia de comando, regras e método). "
