@@ -44,6 +44,23 @@ Pesquisado e **não usado**: a loja oficial do Grok Bot (x.ai/bot/marketplace) n
 modelos nem a licença; o catálogo do OpenBot tem licença ambígua; skills do ClawHub de anúncios têm alerta
 de segurança.
 
+## Vertente imobiliária (`equipe-imobiliaria.zip`)
+
+15 agentes no canal **Imobiliário**, sob o **Head Imobiliário** (que responde ao Diretor Comercial): Captador de
+Imóveis, Redator de Anúncios Imobiliários (ZAP, Viva Real, OLX, QuintoAndar, Imovelweb), SDR Imobiliário (WhatsApp),
+Agendador de Visitas, Analista de Avaliação (ACM), Consultor de Financiamento, Analista de Investimento,
+Especialista em Documentação e Diligência, Gestor de Locação, Analista de Cadastro de Inquilino, Estrategista de
+Lançamentos, Diretor Criativo Imobiliário, Pesquisador de Bairro e Auditor de Conformidade (CRECI, CDC, LGPD).
+Regras do mercado brasileiro escritas aqui (nenhuma fonte livre cobria). Fontes de método: hoangtng/real-estate-agents,
+neimaciel/imobiliario-diligence, zubair-trabzada/ai-realestate-claude, TheProsperityAgent (MIT) e
+ahacker-1/cre-agent-skills (Apache-2.0). Montar: `EQUIPE=equipe_imobiliario python montar.py fontes equipe-imobiliaria.zip`.
+
+## Publicar na Loja do OpenBot (`publicar_loja.py`)
+
+Publica um pacote na Loja do servidor de contas próprio (skills e agentes, já aprovados), com uma conta de autor
+(ex.: "Loja ICTeam"). Pode rodar de novo: só envia o que é novo ou mudou. Exemplo no topo do script.
+O servidor de contas precisa dos limites da Loja aumentados (`servidor/contas/Dockerfile.auth`).
+
 ## Limites
 
 - Os agentes **não entram sozinhos em reuniões** de vídeo: o Agente de Reuniões trabalha com a transcrição

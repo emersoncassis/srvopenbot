@@ -10,6 +10,8 @@ Fontes (licenças livres, copiadas com a licença junto):
 """
 
 TZ = "America/Sao_Paulo"
+# O Brother (agente principal do Rafael) está no pacote do Rafael.
+EXTERNOS = {"brother": "Brother"}
 
 AREAS = {
     "diretoria": ("Diretoria Comercial", "Rafael com os gerentes de cada área: prioridades, aprovações e relatórios."),
@@ -25,12 +27,12 @@ AREAS = {
 # (chave, nome, cargo, área, responde_a, personas[ag], skills[(fonte, caminho)], foco)
 EQUIPE = [
     # ---------------- Diretoria ----------------
-    ("diretor-comercial", "Diretor Comercial", "Agente principal: fala com o Rafael e coordena todos os gerentes",
-     "diretoria", None,
+    ("diretor-comercial", "Diretor Comercial", "Diretor da área comercial: responde ao Brother e coordena todos os gerentes",
+     "diretoria", "brother",
      ["specialized/specialized-chief-of-staff.md", "specialized/business-strategist.md", "specialized/agents-orchestrator.md"],
      [("kw", "small-business/skills/monday-brief"), ("kw", "small-business/skills/business-pulse"),
       ("kw", "sales/skills/daily-briefing"), ("cs", "c-level-advisor/chief-of-staff"), ("kw", "small-business/skills/report-builder")],
-     "Recebe os pedidos do Rafael, quebra em tarefas, delega para o gerente certo, cobra prazos e devolve ao Rafael "
+     "Recebe os pedidos do Brother (e do Rafael), quebra em tarefas, delega para o gerente certo, cobra prazos e devolve ao Brother "
      "um resumo curto com decisões pendentes. Consolida os relatórios semanais de todas as áreas."),
 
     # ---------------- Marketing ----------------

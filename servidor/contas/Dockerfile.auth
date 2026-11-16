@@ -11,6 +11,17 @@ RUN git clone --depth 1 --branch ${OPENBOT_REF} https://github.com/nightly-labs/
   && rm -rf .git
 RUN bun install --frozen-lockfile --ignore-scripts
 WORKDIR /src/apps/auth-api
+# Loja própria: a OpenBot limita 5 skills e 5 agentes por conta (pensado para a loja pública deles).
+# Aqui a loja é da empresa, então o limite sobe. O build falha se o código mudar e o ajuste não pegar.
+ARG LOJA_LIMITE=1000
+RUN S=src/server/skill-marketplace.ts A=src/server/agent-marketplace.ts \
+  && sed -i "s/const MAX_SKILLS_PER_USER = 5;/const MAX_SKILLS_PER_USER = ${LOJA_LIMITE};/; s/const MAX_VERSIONS_PER_SKILL = 5;/const MAX_VERSIONS_PER_SKILL = ${LOJA_LIMITE};/; s/if ((recent?.count ?? 0) >= 10) {/if ((recent?.count ?? 0) >= ${LOJA_LIMITE}) {/" $S \
+  && sed -i "s/const MAX_AGENTS_PER_USER = 5;/const MAX_AGENTS_PER_USER = ${LOJA_LIMITE};/; s/const MAX_VERSIONS_PER_AGENT = 5;/const MAX_VERSIONS_PER_AGENT = ${LOJA_LIMITE};/; s/const MAX_SUBMISSIONS_PER_DAY = 10;/const MAX_SUBMISSIONS_PER_DAY = ${LOJA_LIMITE};/; s/You can submit up to 5 agents./You can submit up to ${LOJA_LIMITE} agents./" $A \
+  && sed -i '/"MARKETPLACE_UPLOAD_RATE_LIMITER"/,/"simple"/ s/"limit": 5,/"limit": 60,/' wrangler.jsonc \
+  && grep -q "MAX_SKILLS_PER_USER = ${LOJA_LIMITE};" $S && grep -q "MAX_VERSIONS_PER_SKILL = ${LOJA_LIMITE};" $S \
+  && grep -q ">= ${LOJA_LIMITE}) {" $S \
+  && grep -q "MAX_AGENTS_PER_USER = ${LOJA_LIMITE};" $A && grep -q "MAX_SUBMISSIONS_PER_DAY = ${LOJA_LIMITE};" $A \
+  && ! grep -A3 '"MARKETPLACE_UPLOAD_RATE_LIMITER"' wrangler.jsonc | grep -q '"limit": 5,'
 RUN NODE_OPTIONS=--max-old-space-size=5500 node /src/node_modules/vite/bin/vite.js build >/tmp/build.log 2>&1 \
   || (tail -50 /tmp/build.log; exit 1)
 COPY auth-entrypoint.sh /usr/local/bin/auth-entrypoint

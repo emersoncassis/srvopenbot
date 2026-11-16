@@ -1,3 +1,7 @@
 .env
 *.env
 !*.env.example
+
+# Material do cliente (prompts e base de conhecimento do Rafael): nunca no repositório público
+cliente/agentes/rafael/
+cliente/agentes/*rafael*.zip

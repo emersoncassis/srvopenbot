@@ -6,9 +6,13 @@
 <pasta-das-fontes> tem os clones: agency-agents, marketingskills, knowledge-work-plugins, claude-skills.
 Importe o zip no OpenBot em: Configurações do servidor > Importar.
 """
-import json, os, re, shutil, subprocess, sys, tempfile, zipfile, datetime
+import importlib, json, os, re, shutil, subprocess, sys, tempfile, zipfile, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from equipe import AREAS, EQUIPE, ROTINAS, MEMORIAS_COMUNS, TZ
+# EQUIPE=equipe (comercial, padrão) ou EQUIPE=equipe_imobiliario
+_eq = importlib.import_module(os.environ.get("EQUIPE", "equipe"))
+AREAS, EQUIPE, ROTINAS, MEMORIAS_COMUNS, TZ = _eq.AREAS, _eq.EQUIPE, _eq.ROTINAS, _eq.MEMORIAS_COMUNS, _eq.TZ
+REGRAS_EXTRAS = getattr(_eq, "REGRAS_EXTRAS", [])
+CANAL_DIRETORIA = getattr(_eq, "CANAL_DIRETORIA", True)
 
 SRC = sys.argv[1]
 OUT = sys.argv[2]
@@ -17,6 +21,11 @@ FONTES = {
     "mk": ("marketingskills", "skills", "coreyhaines31/marketingskills", "MIT"),
     "kw": ("knowledge-work-plugins", "", "anthropics/knowledge-work-plugins", "Apache-2.0"),
     "cs": ("claude-skills", "", "alirezarezvani/claude-skills", "MIT"),
+    "re": ("real-estate-agents", "", "hoangtng/real-estate-agents", "MIT"),
+    "dl": ("imobiliario-diligence", "", "neimaciel/imobiliario-diligence", "MIT"),
+    "zt": ("ai-realestate-claude", "", "zubair-trabzada/ai-realestate-claude", "MIT"),
+    "cr": ("cre-agent-skills", "", "ahacker-1/cre-agent-skills", "Apache-2.0"),
+    "pr": ("prosperity-real-estate-skills", "", "TheProsperityAgent/prosperity-real-estate-skills", "MIT"),
 }
 SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".venv", "dist", "build"}
 
@@ -29,6 +38,31 @@ def licenca(repo):
         if os.path.exists(p):
             return open(p, encoding="utf-8", errors="replace").read()
     return ""
+
+def consertar_cabecalho(caminho):
+    """Algumas skills de origem têm YAML inválido no cabeçalho (ex.: ':' sem aspas na description).
+    A Loja do OpenBot rejeita. Coloca name/description entre aspas só quando o YAML não abre. Devolve True se mudou."""
+    import yaml
+    txt = open(caminho, encoding="utf-8").read()
+    m = re.match(r"^---\s*\n(.*?)\n---", txt, re.S)
+    if not m:
+        return False
+    try:
+        v = yaml.safe_load(m.group(1))
+        if isinstance(v, dict) and isinstance(v.get("name"), str) and isinstance(v.get("description"), str):
+            return False
+    except Exception:
+        pass
+    linhas = []
+    for l in m.group(1).split("\n"):
+        k = re.match(r"^(name|description):\s*(.*)$", l)
+        if k and not k.group(2).startswith(('"', "'")):
+            l = "%s: %s" % (k.group(1), json.dumps(k.group(2).strip(), ensure_ascii=False))
+        linhas.append(l)
+    novo = txt[:m.start(1)] + "\n".join(linhas) + txt[m.end(1):]
+    yaml.safe_load(re.match(r"^---\s*\n(.*?)\n---", novo, re.S).group(1))
+    open(caminho, "w", encoding="utf-8", newline="\n").write(novo)
+    return True
 
 def src_path(fonte, rel):
     repo, base, _, _ = FONTES[fonte]
@@ -49,7 +83,8 @@ def resolve_skill(fonte, rel):
             return root
     raise SystemExit("skill não encontrada: %s %s" % (fonte, rel))
 
-nomes = {a[0]: a[1] for a in EQUIPE}
+nomes = dict(getattr(_eq, "EXTERNOS", {}))
+nomes.update({a[0]: a[1] for a in EQUIPE})
 subordinados = {}
 for a in EQUIPE:
     if a[4]:
@@ -75,9 +110,12 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
         dst = os.path.join(base, "skills", nome_pasta)
         shutil.copytree(p, dst, ignore=shutil.ignore_patterns(*SKIP_DIRS, ".env*", "*private*key*", "*.zip", "*.tar", "*.gz", "*.7z", "*.rar"))
         repo, _, slug, lic = FONTES[fonte]
-        with open(os.path.join(dst, "SOURCE.md"), "w", encoding="utf-8") as f:
-            f.write("Fonte: https://github.com/%s (commit %s), licença %s. Copiado sem alterações.\n" % (slug, commit(repo), lic))
-        with open(os.path.join(dst, "LICENSE-ORIGEM.txt"), "w", encoding="utf-8") as f:
+        ajuste = consertar_cabecalho(os.path.join(dst, "SKILL.md"))
+        with open(os.path.join(dst, "SOURCE.md"), "w", encoding="utf-8", newline="\n") as f:
+            f.write("Fonte: https://github.com/%s (commit %s), licença %s. %s\n" % (
+                slug, commit(repo), lic,
+                "Único ajuste: cabeçalho YAML do SKILL.md (texto entre aspas)." if ajuste else "Copiado sem alterações."))
+        with open(os.path.join(dst, "LICENSE-ORIGEM.txt"), "w", encoding="utf-8", newline="\n") as f:
             f.write(licenca(repo))
         skill_paths.append("agents/%s/skills/%s" % (key, nome_pasta))
     # Instruções completas (cadeia de comando + personas)
@@ -94,15 +132,18 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
         linhas.append("- Gerentes: %s." % ", ".join("**%s** (%s)" % (nomes[k], AREAS[a[3]][0]) for a in EQUIPE for k in [a[0]] if a[4] == "diretor-comercial"))
     linhas += ["- Algo de outra área: peça ao gerente daquela área, não faça por ele.", "",
                "## Regras", *["- " + m for m in MEMORIAS_COMUNS],
-               "- Use as suas skills (pasta skills) como método de trabalho. Elas estão em inglês; responda em português.",
+               *["- " + r for r in REGRAS_EXTRAS],
+               "- Use as suas skills (pasta skills) como método de trabalho. Muitas estão em inglês; responda em português.",
                "- Contexto da empresa (produto, público, metas, tom de voz): pergunte ao Diretor Comercial ou ao Rafael e salve como memória.", ""]
-    for rel in personas:
-        p = src_path("ag", rel)
+    for item in personas:
+        fp, rel = item if isinstance(item, tuple) else ("ag", item)
+        repo_p, _, slug_p, lic_p = FONTES[fp]
+        p = src_path(fp, rel)
         txt = open(p, encoding="utf-8").read()
         txt = re.sub(r"^---\n.*?\n---\n", "", txt, flags=re.S)
-        linhas += ["---", "", "## Referência de método (persona em inglês, de msitarzewski/agency-agents, MIT, commit %s): %s"
-                   % (commit("agency-agents"), os.path.basename(rel)), "", txt.strip(), ""]
-    with open(os.path.join(base, "files", "INSTRUCTIONS.md"), "w", encoding="utf-8") as f:
+        linhas += ["---", "", "## Referência de método (persona em inglês, de %s, %s, commit %s): %s"
+                   % (slug_p, lic_p, commit(repo_p), os.path.basename(rel)), "", txt.strip(), ""]
+    with open(os.path.join(base, "files", "INSTRUCTIONS.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(linhas))
     # Descrição curta (<= 2000)
     desc = "%s. %s " % (cargo, foco)
@@ -119,6 +160,8 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
 
 channels = []
 for area, (nome_area, topico) in AREAS.items():
+    if area == "diretoria" and not CANAL_DIRETORIA:
+        continue
     if area == "diretoria":
         membros = ["diretor-comercial"] + [a[0] for a in EQUIPE if a[4] == "diretor-comercial"]
         lead = "diretor-comercial"
@@ -126,7 +169,7 @@ for area, (nome_area, topico) in AREAS.items():
                  "O Diretor Comercial coordena; cada gerente responde pela sua área e traz números e decisões pendentes.")
     else:
         membros = [a[0] for a in EQUIPE if a[3] == area]
-        lead = next(a[0] for a in EQUIPE if a[3] == area and a[4] == "diretor-comercial")
+        lead = next(a[0] for a in EQUIPE if a[3] == area and a[4] not in [b[0] for b in EQUIPE if b[3] == area])
         instr = ("Área de %s: %s O gerente (%s) distribui as tarefas, revisa as entregas e leva o resultado à Diretoria."
                  % (nome_area, topico, nomes[lead]))
     channels.append({"key": area, "name": nome_area, "title": topico[:120], "instructions": instr[:2000],
@@ -135,7 +178,7 @@ for area, (nome_area, topico) in AREAS.items():
 manifest = {"format": "openbot-agent-import", "version": 1,
             "source": {"app": "grok-bot", "exportedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
             "agents": manifest_agents, "channels": channels}
-with open(os.path.join(tmp, "openbot-import.json"), "w", encoding="utf-8") as f:
+with open(os.path.join(tmp, "openbot-import.json"), "w", encoding="utf-8", newline="\n") as f:
     json.dump(manifest, f, ensure_ascii=False, indent=2)
 
 if os.path.exists(OUT):
