@@ -15,7 +15,7 @@ gerente como líder.
 | Grupo (canal) | Gerente (líder) | Especialistas |
 |---|---|---|
 | **Diretoria Comercial** | Diretor Comercial | os 7 gerentes abaixo |
-| **Marketing** | CMO | Estrategista de Conteúdo, Copywriter, Especialista em SEO, Especialista em E-mail e CRM, Inteligência de Mercado |
+| **Marketing** | CMO | Pesquisador de Tendências, Estrategista de Conteúdo, Copywriter, Especialista em SEO, Especialista em E-mail e CRM, Inteligência de Mercado |
 | **Tráfego Pago** | Head de Tráfego Pago | Gestor de Meta Ads, Gestor de Google Ads, Gestor de TikTok Ads, Analista de Mensuração |
 | **Criativos** | Diretor de Criação | Designer de Peças (IA), Editor e Roteirista de Vídeo, Pesquisador de Anúncios |
 | **Social Media** | Head de Social Media | Social Instagram e TikTok, Social LinkedIn e X, Gestor de Comunidade |
@@ -39,6 +39,16 @@ Cada agente tem:
 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | skills de marketing e tráfego (ads, ad-creative, copywriting, social, video, conversion-tracking…) |
 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | skills de vendas, small-business, jurídico, atendimento |
 | [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | MIT | skills de C-level (CMO, CRO, CFO), propostas, social |
+| [elevenlabs/skills](https://github.com/elevenlabs/skills) | MIT | voz: narração, transcrição, troca de voz, dublagem, efeitos e música (Editor de Vídeo) |
+| [digitalsamba/claude-code-video-toolkit](https://github.com/digitalsamba/claude-code-video-toolkit) | MIT | ffmpeg e design de vídeo (Editor de Vídeo) |
+| `skills-icteam/` (deste repositório) | ICTeam | `estudio-video`, `clonar-voz`, `pesquisa-tendencias`: usam o estúdio instalado na imagem do cliente |
+
+**Estúdio de vídeo (na imagem do cliente, `cliente/Dockerfile`):** ffmpeg, ImageMagick, Remotion (Node 22, Chrome headless)
+com modelo de Reels/TikTok/Shorts com legenda animada, legenda automática com faster-whisper (modelo small, CPU), yt-dlp e a pesquisa
+de tendências [last30days](https://github.com/mvanhorn/last30days-skill) (MIT). As skills oficiais do Remotion
+([remotion-dev/skills](https://github.com/remotion-dev/skills)) são baixadas no build, não vão no pacote.
+Comandos para os agentes: `novo-video`, `cortar-silencio`, `legendar`, `renderizar`, `baixar-referencia`, `tendencias`
+(guia em `/opt/estudio-video/LEIA-ME.md`). O Remotion é grátis para pessoa física e empresa de até 3 pessoas.
 
 Pesquisado e **não usado**: a loja oficial do Grok Bot (x.ai/bot/marketplace) não publica o texto dos
 modelos nem a licença; o catálogo do OpenBot tem licença ambígua; skills do ClawHub de anúncios têm alerta
@@ -66,8 +76,8 @@ Para completar um OpenBot que já tem parte da equipe: `SO_AGENTES=chave1,chave2
 
 ## Equipe de redes sociais (`equipe-social.zip`)
 
-11 agentes no canal **Redes Sociais**, para um OpenBot só de postagem: Head de Social Media (agente principal),
-Estrategista de Conteúdo, Copywriter, Social Instagram e TikTok, Social YouTube, Designer de Peças, Editor de Vídeo,
+12 agentes no canal **Redes Sociais**, para um OpenBot só de postagem: Head de Social Media (agente principal),
+Pesquisador de Tendências (radar semanal de pautas), Estrategista de Conteúdo, Copywriter, Social Instagram e TikTok, Social YouTube, Designer de Peças, Editor de Vídeo (edita no estúdio do servidor e clona voz),
 Gestor de Comunidade e os bots de integração de Instagram, TikTok e YouTube. Reaproveita os agentes das outras
 equipes com a cadeia ajustada. O nome do dono do OpenBot fica em `DONO` no arquivo da equipe.
 Montar: `EQUIPE=equipe_social python montar.py fontes equipe-social.zip`.

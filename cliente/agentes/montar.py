@@ -29,6 +29,10 @@ FONTES = {
     "zt": ("ai-realestate-claude", "", "zubair-trabzada/ai-realestate-claude", "MIT"),
     "cr": ("cre-agent-skills", "", "ahacker-1/cre-agent-skills", "Apache-2.0"),
     "pr": ("prosperity-real-estate-skills", "", "TheProsperityAgent/prosperity-real-estate-skills", "MIT"),
+    "el": ("elevenlabs_skills", "", "elevenlabs/skills", "MIT"),
+    "vt": ("digitalsamba_claude-code-video-toolkit", ".claude/skills", "digitalsamba/claude-code-video-toolkit", "MIT"),
+    # skills próprias da ICTeam (neste repositório); usam as ferramentas do estúdio instaladas na imagem do cliente
+    "ic": (os.path.join(os.path.dirname(os.path.abspath(__file__)), "skills-icteam"), "", "emersoncassis/srvopenbot", "ICTeam"),
 }
 SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".venv", "dist", "build"}
 

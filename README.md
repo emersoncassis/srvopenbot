@@ -35,7 +35,7 @@ openbot-templates/
 |---|---|---|---|
 | **OpenBot Contas** | `apps/auth-api` do OpenBot compilado e rodando local (Miniflare: D1/R2 em disco). Login sem e-mail: o código aparece na tela. | interno `openbot-contas:3101`; público `contas.openbot.<dominio>` só rotas do celular | ~950 MB |
 | **OpenBot Remoto** | `remote/` do OpenBot: Signal (WebSocket) + coturn | `signal.openbot.<dominio>`, `turn.openbot.<dominio>` | ~150 MB |
-| **OpenBot cliente** | imagem oficial `ghcr.io/nightly-labs/openbot` em **modo desktop** + openbox + x11vnc + noVNC | `<nome>.openbot.<dominio>` | ~1 GB parado |
+| **OpenBot cliente** | imagem oficial `ghcr.io/nightly-labs/openbot` em **modo desktop** + openbox + x11vnc + noVNC + estúdio de vídeo (ffmpeg, Remotion, legendas, yt-dlp) | `<nome>.openbot.<dominio>` | ~1 GB parado |
 
 VPS de referência: 2 vCPU, 8 GB RAM → servidor + 3 a 4 clientes com uso leve.
 
