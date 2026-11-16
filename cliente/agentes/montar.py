@@ -14,6 +14,8 @@ AREAS, EQUIPE, ROTINAS, MEMORIAS_COMUNS, TZ = _eq.AREAS, _eq.EQUIPE, _eq.ROTINAS
 REGRAS_EXTRAS = getattr(_eq, "REGRAS_EXTRAS", [])
 CANAL_DIRETORIA = getattr(_eq, "CANAL_DIRETORIA", True)
 
+# SO_AGENTES=chave1,chave2: monta só esses agentes (para completar um OpenBot que já tem o resto da equipe)
+SO_AGENTES = set(filter(None, os.environ.get("SO_AGENTES", "").split(",")))
 SRC = sys.argv[1]
 OUT = sys.argv[2]
 FONTES = {
@@ -93,6 +95,8 @@ for a in EQUIPE:
 tmp = tempfile.mkdtemp()
 manifest_agents, avisos = [], []
 for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
+    if SO_AGENTES and key not in SO_AGENTES:
+        continue
     base = os.path.join(tmp, "agents", key)
     os.makedirs(os.path.join(base, "files"), exist_ok=True)
     # Skills
@@ -159,6 +163,8 @@ for key, nome, cargo, area, chefe, personas, skills, foco in EQUIPE:
                             "files": "agents/%s/files" % key})
 
 channels = []
+if SO_AGENTES:
+    AREAS = {}  # pacote parcial (só alguns agentes): sem canais
 for area, (nome_area, topico) in AREAS.items():
     if area == "diretoria" and not CANAL_DIRETORIA:
         continue

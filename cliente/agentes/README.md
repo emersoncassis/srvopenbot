@@ -55,6 +55,15 @@ Regras do mercado brasileiro escritas aqui (nenhuma fonte livre cobria). Fontes 
 neimaciel/imobiliario-diligence, zubair-trabzada/ai-realestate-claude, TheProsperityAgent (MIT) e
 ahacker-1/cre-agent-skills (Apache-2.0). Montar: `EQUIPE=equipe_imobiliario python montar.py fontes equipe-imobiliaria.zip`.
 
+## Equipe de TI (`equipe-ti.zip`)
+
+11 agentes no canal **TI e Integrações**. O **Head de TI** responde ao Diretor Técnico (uma pessoa, pelo WhatsApp) e
+atende o Brother. Abaixo dele: Arquiteto de Agentes e Modelos (escolhe provedor e modelo de cada agente: OpenAI,
+xAI/Grok, Google/Gemini, Anthropic/Claude), Engenheiro de Integrações, Desenvolvedor, DevOps, Analista de Custos de IA e
+os **bots de integração** de Instagram, WhatsApp, TikTok, YouTube e LinkedIn (app da Loja, API oficial com token ou o
+navegador do OpenBot, com o login feito pela pessoa). Montar: `EQUIPE=equipe_ti python montar.py fontes equipe-ti.zip`.
+Para completar um OpenBot que já tem parte da equipe: `SO_AGENTES=chave1,chave2` monta só esses agentes, sem canais.
+
 ## Publicar na Loja do OpenBot (`publicar_loja.py`)
 
 Publica um pacote na Loja do servidor de contas próprio (skills e agentes, já aprovados), com uma conta de autor
