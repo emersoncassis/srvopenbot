@@ -9,7 +9,7 @@ import equipe as _com, equipe_ti as _ti
 TZ = "America/Sao_Paulo"
 CANAL_DIRETORIA = False
 EXTERNOS = {}
-DONO = "Iago"
+DONO = "Yago"
 
 AREAS = {"social": ("Redes Sociais", "Postagens, Reels, TikToks, YouTube/Shorts, roteiros, peças e métricas.")}
 
@@ -19,13 +19,13 @@ def _pega(eq, chave, chefe, foco_extra=""):
     return (k, nome, cargo, "social", chefe, personas, skills, foco + foco_extra)
 
 EQUIPE = [
-    ("head-social", "Head de Social Media", "Agente principal: fala com o Iago e comanda a equipe de redes sociais",
+    ("head-social", "Head de Social Media", "Agente principal: fala com o Yago e comanda a equipe de redes sociais",
      "social", None,
      ["marketing/marketing-social-media-strategist.md", "marketing/marketing-multi-platform-publisher.md"],
      [("mk", "social"), ("kw", "small-business/skills/social-content-engine"), ("cs", "marketing-skill/social-media-manager"),
       ("cs", "marketing-skill/social-media-analyzer")],
      "Define a linha editorial do Instagram, TikTok e YouTube, distribui o trabalho, aprova o calendário, cuida da publicação "
-     "e lê as métricas. Devolve ao Iago o calendário, as peças prontas para aprovar e o resumo das métricas."),
+     "e lê as métricas. Devolve ao Yago o calendário, as peças prontas para aprovar e o resumo das métricas."),
     _pega(_com, "estrategista-conteudo", "head-social"),
     _pega(_com, "copywriter", "head-social"),
     _pega(_com, "social-instagram-tiktok", "head-social"),
@@ -54,8 +54,8 @@ ROTINAS = {
 
 MEMORIAS_COMUNS = [
     "Responda sempre em português do Brasil.",
-    "Este é o OpenBot do Iago, focado em redes sociais: Instagram, TikTok e YouTube.",
-    "Antes de publicar, responder em nome da marca ou gastar com anúncio, peça aprovação ao Iago.",
+    "Este é o OpenBot do Yago, focado em redes sociais: Instagram, TikTok e YouTube.",
+    "Antes de publicar, responder em nome da marca ou gastar com anúncio, peça aprovação ao Yago.",
     "Entregue resultados curtos: o que foi feito, peças prontas para aprovar, métricas e próximos passos.",
 ]
 
