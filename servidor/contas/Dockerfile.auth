@@ -1,0 +1,19 @@
+# Servidor de contas do OpenBot (apps/auth-api) rodando LOCAL, sem Cloudflare e sem e-mail.
+# Compila o Worker e roda com o Miniflare (D1/R2 em disco, volume /state).
+# O codigo de login aparece na propria tela do OpenBot (AUTH_EXPOSE_DEVELOPMENT_CODE).
+FROM oven/bun:1.4.2
+ARG OPENBOT_REF=v0.71.0
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates curl && rm -rf /var/lib/apt/lists/*
+# Vite nao carrega a config sob o Bun; build e servidor rodam com Node 24.
+COPY --from=node:24-slim /usr/local/bin/node /usr/local/bin/node
+WORKDIR /src
+RUN git clone --depth 1 --branch ${OPENBOT_REF} https://github.com/nightly-labs/openbot.git . \
+  && rm -rf .git
+RUN bun install --frozen-lockfile --ignore-scripts
+WORKDIR /src/apps/auth-api
+RUN NODE_OPTIONS=--max-old-space-size=5500 node /src/node_modules/vite/bin/vite.js build >/tmp/build.log 2>&1 \
+  || (tail -50 /tmp/build.log; exit 1)
+COPY auth-entrypoint.sh /usr/local/bin/auth-entrypoint
+RUN chmod 0755 /usr/local/bin/auth-entrypoint
+EXPOSE 3101
+ENTRYPOINT ["/usr/local/bin/auth-entrypoint"]

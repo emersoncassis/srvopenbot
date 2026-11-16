@@ -1,0 +1,75 @@
+# OpenBot Remoto — Signal e TURN próprios (código oficial em remote/ do repositório OpenBot).
+# Fazem a ponte entre o app de celular e os OpenBots desta VPS, sem os servidores deles.
+#
+#  - openbot-signal: WebSocket de sinalização em https://${SIGNAL_HOST} (TLS no Traefik do Dokploy).
+#  - openbot-turn:   coturn em rede host. Portas: 3478 TCP/UDP e UDP 16384-65535 (relay).
+#                    Se ligar um firewall (ufw), libere essas portas.
+#
+# Variáveis (aba Environment): OPENBOT_REF (mesma versão das instâncias), SIGNAL_HOST, TURN_HOST,
+# TURN_PUBLIC_IP e os segredos (gerados na instalação; REMOTE_AUTH_WEBHOOK_SECRET e a chave pública
+# são os mesmos do projeto OpenBot Contas).
+services:
+  openbot-signal:
+    build:
+      context: https://github.com/nightly-labs/openbot.git#${OPENBOT_REF:-v0.71.0}
+      dockerfile: remote/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      REMOTE_SIGNAL_HOST: 0.0.0.0
+      REMOTE_SIGNAL_PORT: "8081"
+      REMOTE_HEALTH_HOST: 0.0.0.0
+      REMOTE_HEALTH_PORT: "8080"
+      REMOTE_TLS_DISABLED: "true"
+      REMOTE_TRUST_PROXY: "true"
+      REMOTE_TICKET_PUBLIC_JWKS: ${REMOTE_TICKET_PUBLIC_JWKS}
+      REMOTE_CONTROL_PLANE_URL: http://openbot-contas:3101
+      REMOTE_SESSION_SECRET: ${REMOTE_SESSION_SECRET}
+      REMOTE_AUTH_WEBHOOK_SECRET: ${REMOTE_AUTH_WEBHOOK_SECRET}
+      REMOTE_METRICS_TOKEN: ${REMOTE_METRICS_TOKEN}
+      TURN_SHARED_SECRET: ${TURN_SHARED_SECRET}
+      TURN_HOST: ${TURN_HOST}
+      TURN_PORT: "3478"
+      TURN_TLS_PORT: "5349"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.services.openbot-signal.loadbalancer.server.port=8081
+      - traefik.http.middlewares.openbot-signal-https.redirectscheme.scheme=https
+      - traefik.http.routers.openbot-signal-http.rule=Host(`${SIGNAL_HOST}`)
+      - traefik.http.routers.openbot-signal-http.entrypoints=web
+      - traefik.http.routers.openbot-signal-http.middlewares=openbot-signal-https
+      - traefik.http.routers.openbot-signal-http.service=openbot-signal
+      - traefik.http.routers.openbot-signal.rule=Host(`${SIGNAL_HOST}`)
+      - traefik.http.routers.openbot-signal.entrypoints=websecure
+      - traefik.http.routers.openbot-signal.tls.certresolver=letsencrypt
+      - traefik.http.routers.openbot-signal.service=openbot-signal
+
+  openbot-turn:
+    build:
+      context: https://github.com/nightly-labs/openbot.git#${OPENBOT_REF:-v0.71.0}
+      dockerfile: remote/coturn/Dockerfile
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TURN_PUBLIC_IP: ${TURN_PUBLIC_IP}
+      TURN_REALM: ${TURN_HOST}
+      TURN_SHARED_SECRET: ${TURN_SHARED_SECRET}
+    volumes:
+      # Config com as redes internas do Docker liberadas (aba Advanced > Mounts: turnserver.conf).
+      - ../files/turnserver.conf:/etc/coturn/openbot.conf:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  dokploy-network:
+    external: true

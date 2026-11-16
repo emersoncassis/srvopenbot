@@ -1,0 +1,53 @@
+# OpenBot Contas — servidor de contas do próprio OpenBot (apps/auth-api), rodando local.
+# Atende todos os OpenBots desta VPS. Sem Cloudflare, sem e-mail: o código de login aparece na tela.
+#
+# Rede: os OpenBots chegam em openbot-contas:3101 pela rede interna do Dokploy.
+# Internet: https://${CONTAS_HOST} publica SÓ os caminhos que o app de celular usa (conexão por QR,
+# sessão, perfil, acesso remoto). O login por e-mail (/v1/auth) NÃO fica exposto.
+#
+# Variáveis (aba Environment):
+#   OPENBOT_REF  versão do código do OpenBot (tag do GitHub). Igual ao OPENBOT_TAG das instâncias.
+#   CONTAS_HOST  endereço público para o celular.
+#   REMOTE_*     chaves do acesso remoto (geradas na instalação; a pública vai também no OpenBot Remoto).
+# Arquivos de build (Dockerfile.auth, auth-entrypoint.sh): aba Advanced > Mounts.
+services:
+  openbot-contas:
+    build:
+      context: ../files
+      dockerfile: Dockerfile.auth
+      args:
+        OPENBOT_REF: ${OPENBOT_REF:-v0.71.0}
+    restart: unless-stopped
+    environment:
+      CONTAS_HOST: ${CONTAS_HOST:-}
+      REMOTE_TICKET_KEY_ID: ${REMOTE_TICKET_KEY_ID:-}
+      REMOTE_TICKET_PRIVATE_JWK: ${REMOTE_TICKET_PRIVATE_JWK:-}
+      REMOTE_TICKET_PUBLIC_JWKS: ${REMOTE_TICKET_PUBLIC_JWKS:-}
+      REMOTE_SIGNAL_URL: ${REMOTE_SIGNAL_URL:-}
+      REMOTE_AUTH_WEBHOOK_URL: ${REMOTE_AUTH_WEBHOOK_URL:-}
+      REMOTE_AUTH_WEBHOOK_SECRET: ${REMOTE_AUTH_WEBHOOK_SECRET:-}
+      SKILLS_ADMIN_TOKEN: ${SKILLS_ADMIN_TOKEN:-}
+    volumes:
+      - auth-state:/state
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.services.openbot-contas.loadbalancer.server.port=3101
+      - traefik.http.middlewares.openbot-contas-https.redirectscheme.scheme=https
+      - traefik.http.routers.openbot-contas-http.rule=Host(`${CONTAS_HOST}`)
+      - traefik.http.routers.openbot-contas-http.entrypoints=web
+      - traefik.http.routers.openbot-contas-http.middlewares=openbot-contas-https
+      - traefik.http.routers.openbot-contas-http.service=openbot-contas
+      - traefik.http.routers.openbot-contas.rule=Host(`${CONTAS_HOST}`) && (PathPrefix(`/v1/mobile-auth/`) || PathPrefix(`/v1/me`) || PathPrefix(`/v1/mobile/`) || PathPrefix(`/v2/remote/`) || PathPrefix(`/v2/hosting/`) || PathPrefix(`/v1/avatars/`) || PathPrefix(`/.well-known/`) || Path(`/health/live`))
+      - traefik.http.routers.openbot-contas.entrypoints=websecure
+      - traefik.http.routers.openbot-contas.tls.certresolver=letsencrypt
+      - traefik.http.routers.openbot-contas.service=openbot-contas
+
+volumes:
+  auth-state:
+
+networks:
+  dokploy-network:
+    external: true

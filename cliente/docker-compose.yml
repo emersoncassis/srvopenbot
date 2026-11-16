@@ -1,0 +1,58 @@
+# OpenBot — instância (modo independente: sem conta openbot.run, sem Cloudflare, sem e-mail).
+#
+# O app OpenBot roda em modo desktop e a tela abre no navegador (noVNC), protegida por usuário e senha.
+# O login usa o servidor de contas do projeto "OpenBot Contas" (o código aparece na própria tela).
+#
+# Variáveis (aba Environment):
+#   INSTANCIA       nome curto e único (letras minúsculas, números e hífen). Ex.: fulano
+#   OPENBOT_HOST    endereço de acesso. Ex.: fulano.openbot.seudominio.com
+#   OPENBOT_BASIC_AUTH  usuário:hash da senha (htpasswd), entre aspas simples
+#   OPENBOT_TAG     versão da imagem oficial do OpenBot (a mesma do servidor de contas)
+#
+# Arquivos de build (Dockerfile, entrypoint, seccomp.json): aba Advanced > Mounts.
+# Para criar outro OpenBot: duplique este projeto/serviço e troque INSTANCIA, OPENBOT_HOST e a senha.
+services:
+  openbot:
+    build:
+      context: ../files
+      dockerfile: Dockerfile
+      args:
+        OPENBOT_TAG: ${OPENBOT_TAG:-0.71.0}
+    restart: unless-stopped
+    security_opt:
+      - seccomp=../files/seccomp.json
+      - no-new-privileges:true
+    shm_size: 1g
+    stop_grace_period: 60s
+    environment:
+      OPENBOT_AUTH_UPSTREAM: openbot-contas:3101
+      # Celular: Signal próprio (projeto OpenBot Remoto) e endereço público do servidor de contas.
+      OPENBOT_REMOTE_SIGNAL_URL: ${OPENBOT_REMOTE_SIGNAL_URL:?defina OPENBOT_REMOTE_SIGNAL_URL}
+      OPENBOT_MOBILE_AUTH_API_URL: ${OPENBOT_MOBILE_AUTH_API_URL:?defina OPENBOT_MOBILE_AUTH_API_URL}
+      OPENBOT_SCREEN_SIZE: ${OPENBOT_SCREEN_SIZE:-1600x900}
+    volumes:
+      - openbot-data:/data
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.services.openbot-${INSTANCIA}.loadbalancer.server.port=6080
+      - traefik.http.middlewares.openbot-${INSTANCIA}-auth.basicauth.users=${OPENBOT_BASIC_AUTH}
+      - traefik.http.middlewares.openbot-${INSTANCIA}-https.redirectscheme.scheme=https
+      - traefik.http.routers.openbot-${INSTANCIA}-http.rule=Host(`${OPENBOT_HOST}`)
+      - traefik.http.routers.openbot-${INSTANCIA}-http.entrypoints=web
+      - traefik.http.routers.openbot-${INSTANCIA}-http.middlewares=openbot-${INSTANCIA}-https
+      - traefik.http.routers.openbot-${INSTANCIA}-http.service=openbot-${INSTANCIA}
+      - traefik.http.routers.openbot-${INSTANCIA}.rule=Host(`${OPENBOT_HOST}`)
+      - traefik.http.routers.openbot-${INSTANCIA}.entrypoints=websecure
+      - traefik.http.routers.openbot-${INSTANCIA}.tls.certresolver=letsencrypt
+      - traefik.http.routers.openbot-${INSTANCIA}.middlewares=openbot-${INSTANCIA}-auth
+      - traefik.http.routers.openbot-${INSTANCIA}.service=openbot-${INSTANCIA}
+
+volumes:
+  openbot-data:
+
+networks:
+  dokploy-network:
+    external: true
