@@ -92,6 +92,11 @@ O script agenda um **desfazer automático em 5 minutos**; depois de conferir que
 
 O DNS curinga já cobre o endereço novo; o certificado HTTPS sai sozinho pelo Traefik.
 
+## Equipe de agentes comercial
+
+`cliente/agentes/equipe-comercial.zip`: 32 agentes em 8 grupos (marketing, tráfego, criativos, social,
+vendas, clientes, administrativo) para importar em cada cliente. Ver [cliente/agentes/README.md](cliente/agentes/README.md).
+
 ## Atualizar a versão do OpenBot
 
 Trocar **juntos** `OPENBOT_REF` (Contas e Remoto, ex. `v0.72.0`) e `OPENBOT_TAG` (clientes, ex. `0.72.0`) e
