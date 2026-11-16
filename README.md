@@ -45,7 +45,7 @@ VPS de referência: 2 vCPU, 8 GB RAM → servidor + 3 a 4 clientes com uso leve.
 - DNS (Cloudflare, **DNS only / nuvem cinza**):
   - `*.openbot.<dominio>` → IP da VPS
   - `openbot.<dominio>` → IP da VPS
-- Portas abertas na VPS: TCP 80, 443, 3478; UDP 3478 e **16384–65535** (relay do TURN).
+- Portas abertas na VPS: TCP 22, 80, 443, 3478; UDP 443, 3478 e **16384–65535** (relay do TURN). Ver "Firewall".
 
 ## Instalação do servidor (uma vez)
 
@@ -62,6 +62,24 @@ VPS de referência: 2 vCPU, 8 GB RAM → servidor + 3 a 4 clientes com uso leve.
    - `https://contas.openbot.<dominio>/health/live` → `{"status":"ok"}`
    - `https://signal.openbot.<dominio>/health/live` → `{"status":"live"}`
    - `https://contas.openbot.<dominio>/v1/auth/email/start` → **404** (login por e-mail não exposto)
+
+## Firewall (ufw)
+
+`servidor/scripts/firewall.sh` (rodar como root na VPS) liga o ufw com:
+
+| Porta | Para quê |
+|---|---|
+| 22/tcp (limit) | SSH |
+| 80/tcp, 443/tcp, 443/udp | Traefik (sites, certificados, HTTP/3) |
+| 3478/tcp+udp, 16384–65535/udp | TURN do celular |
+| tudo de 10.0.0.0/8 e 172.16.0.0/12 | redes internas do Docker (containers falando com o host, ex. TURN) |
+
+Fecha para fora: **3000** (painel do Dokploy sem HTTPS — o Docker publica por fora do ufw, então o bloqueio
+vai na cadeia `DOCKER-USER` em `/etc/ufw/after.rules`) e as portas do Swarm (2377, 7946, 4789).
+**Antes**, dê um domínio HTTPS ao painel (Dokploy → Settings → Web Server → domínio, ex.
+`dokploy.openbot.<dominio>`), senão você perde o acesso ao painel.
+O script agenda um **desfazer automático em 5 minutos**; depois de conferir que o SSH e os sites abrem:
+`systemctl stop fw-rollback.timer`.
 
 ## Novo cliente (OpenBot de uma pessoa)
 
