@@ -82,6 +82,14 @@ Gestor de Comunidade e os bots de integração de Instagram, TikTok e YouTube. R
 equipes com a cadeia ajustada. O nome do dono do OpenBot fica em `DONO` no arquivo da equipe.
 Montar: `EQUIPE=equipe_social python montar.py fontes equipe-social.zip`.
 
+## Stack completa de redes sociais (`equipe-redes-completa.zip`)
+
+24 agentes em 4 canais (Redes Sociais, Criação, Tráfego Pago, Integrações) para Instagram, Facebook, TikTok,
+YouTube, LinkedIn, X e WhatsApp: orgânico, criação com o estúdio de vídeo, anúncios e os bots de conexão de cada rede.
+Genérico (sem nome de cliente). Organograma, skills, rotinas e o que conectar: [STACK-REDES.md](STACK-REDES.md).
+Montar: `EQUIPE=equipe_redes python montar.py fontes equipe-redes-completa.zip` (opcionais: `REDES_DONO`,
+`REDES_LIDER` e `REDES_LIDER_NOME` para pôr um agente que já existe no OpenBot acima do Head de Social Media).
+
 ## Publicar na Loja do OpenBot (`publicar_loja.py`)
 
 Publica um pacote na Loja do servidor de contas próprio (skills e agentes, já aprovados), com uma conta de autor
