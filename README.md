@@ -126,6 +126,21 @@ apontando para `openbot.run` (ver "Armadilhas").
 - **Dokploy regrava o `.env`** com aspas duplas e `\$`; a senha em `OPENBOT_SENHA` é sem as aspas.
 - **TURN sem TLS (5349):** não há certificado para o coturn; só a porta 3478 é usada.
 
+## App do OpenBot no Windows (sem openbot.run)
+
+O app do computador pede e-mail; aqui o login é no servidor de contas próprio, que não fica na internet.
+`cliente/abrir-openbot-local.ps1` abre um túnel SSH para ele, abre o app com `OPENBOT_AUTH_API_URL` e
+`OPENBOT_REMOTE_SIGNAL_URL` e mostra o código de login na tela ("Development code"). Entre com o e-mail
+da conta dona do servidor que quer abrir; o servidor aparece na lista de servidores do app.
+
+No VPS, o contêiner `openbot-contas-tunel` (socat, 32 MB, fora do Dokploy) publica `openbot-contas:3101`
+só em `127.0.0.1:3101`. Recriar depois de reinstalar o VPS:
+
+    docker run -d --name openbot-contas-tunel --restart unless-stopped --network dokploy-network --memory 32m       -p 127.0.0.1:3101:3101 alpine/socat TCP-LISTEN:3101,fork,reuseaddr TCP:openbot-contas:3101
+
+Não use `ports:` no compose do Contas: o redeploy recompila o servidor de contas, que precisa de ~5,5 GB
+de RAM e falha com os OpenBots rodando.
+
 ## Segurança
 
 - Tela do OpenBot só com usuário/senha (basic auth no Traefik) e HTTPS.
