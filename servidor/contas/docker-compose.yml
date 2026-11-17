@@ -3,7 +3,7 @@
 #
 # Rede: os OpenBots chegam em openbot-contas:3101 pela rede interna do Dokploy.
 # Internet: https://${CONTAS_HOST} publica SÓ os caminhos que o app de celular usa (conexão por QR,
-# sessão, perfil, acesso remoto). O login por e-mail (/v1/auth) NÃO fica exposto.
+# sessão, perfil, acesso remoto). O login por e-mail só fica exposto com SMTP e CONTAS_LOGIN_HOST.
 #
 # Variáveis (aba Environment):
 #   OPENBOT_REF  versão do código do OpenBot (tag do GitHub). Igual ao OPENBOT_TAG das instâncias.
@@ -27,6 +27,13 @@ services:
       REMOTE_AUTH_WEBHOOK_URL: ${REMOTE_AUTH_WEBHOOK_URL:-}
       REMOTE_AUTH_WEBHOOK_SECRET: ${REMOTE_AUTH_WEBHOOK_SECRET:-}
       SKILLS_ADMIN_TOKEN: ${SKILLS_ADMIN_TOKEN:-}
+      # Login por e-mail (opcional). Com SMTP, o codigo vai por e-mail; sem, aparece na tela.
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-}
+      EMAIL_SMTP_USERNAME: ${EMAIL_SMTP_USERNAME:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      CONTAS_LOGIN_HOST: ${CONTAS_LOGIN_HOST:-}
     volumes:
       - auth-state:/state
     networks:
@@ -44,6 +51,14 @@ services:
       - traefik.http.routers.openbot-contas.entrypoints=websecure
       - traefik.http.routers.openbot-contas.tls.certresolver=letsencrypt
       - traefik.http.routers.openbot-contas.service=openbot-contas
+      # API inteira (login do app do computador). Desligada enquanto CONTAS_LOGIN_HOST estiver vazio;
+      # o servidor de contas nao sobe com ela ligada e sem SMTP.
+      - traefik.http.routers.openbot-contas-login.rule=Host(`${CONTAS_LOGIN_HOST:-login-desligado.invalid}`)
+      - traefik.http.routers.openbot-contas-login.priority=1
+      - traefik.http.routers.openbot-contas-login.entrypoints=websecure
+      # Sem certresolver próprio (o endereço desligado não pede certificado); usa o certificado do CONTAS_HOST.
+      - traefik.http.routers.openbot-contas-login.tls=true
+      - traefik.http.routers.openbot-contas-login.service=openbot-contas
 
 volumes:
   auth-state:

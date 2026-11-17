@@ -10,15 +10,27 @@ ln -sfn /state .wrangler/state
 secret_file=/state/site-report-hash-secret
 [ -s "$secret_file" ] || head -c 48 /dev/urandom | base64 | tr -d '\n=/+' >"$secret_file"
 
-# Variaveis do Worker local. Os campos de e-mail vazios desligam o envio de e-mail.
+# E-mail de login: com EMAIL_SMTP_HOST (aba Environment) o codigo vai por e-mail (SMTP com TLS na 465).
+# Sem SMTP, o codigo aparece na tela ("Development code") e o login nao pode ficar na internet.
+if [ -n "${EMAIL_SMTP_HOST:-}" ]; then
+  for key in EMAIL_SMTP_PORT EMAIL_SMTP_USERNAME EMAIL_SMTP_PASSWORD EMAIL_FROM; do
+    [ -n "${!key:-}" ] || { echo "Falta $key (o SMTP precisa de host, porta, usuario, senha e remetente)." >&2; exit 1; }
+  done
+  expor_codigo=false
+else
+  expor_codigo=true
+  if [ -n "${CONTAS_LOGIN_HOST:-}" ]; then
+    echo "CONTAS_LOGIN_HOST publica o login na internet, mas sem SMTP o codigo apareceria na tela. Configure EMAIL_SMTP_* ou apague CONTAS_LOGIN_HOST." >&2
+    exit 1
+  fi
+fi
+
+# Variaveis do Worker local.
 {
-  echo "AUTH_EXPOSE_DEVELOPMENT_CODE=true"
-  echo "EMAIL_SMTP_HOST="
-  echo "EMAIL_SMTP_PORT="
-  echo "EMAIL_SMTP_USERNAME="
-  echo "EMAIL_SMTP_PASSWORD="
-  echo "EMAIL_FROM="
-  echo "EMAIL_LICENSE_FROM="
+  echo "AUTH_EXPOSE_DEVELOPMENT_CODE=$expor_codigo"
+  for key in EMAIL_SMTP_HOST EMAIL_SMTP_PORT EMAIL_SMTP_USERNAME EMAIL_SMTP_PASSWORD EMAIL_FROM EMAIL_LICENSE_FROM; do
+    printf "%s='%s'\n" "$key" "${!key:-}"
+  done
   echo "SITE_REPORT_HASH_SECRET=$(cat "$secret_file")"
   echo "HOSTED_SERVERS_ENABLED=false"
   echo "SITE_PUBLISH_ENABLED=false"

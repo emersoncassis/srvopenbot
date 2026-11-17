@@ -138,6 +138,12 @@ só em `127.0.0.1:3101`. Recriar depois de reinstalar o VPS:
 
     docker run -d --name openbot-contas-tunel --restart unless-stopped --network dokploy-network --memory 32m       -p 127.0.0.1:3101:3101 alpine/socat TCP-LISTEN:3101,fork,reuseaddr TCP:openbot-contas:3101
 
+Para o app do computador funcionar sem túnel (Rafael, Yago, clientes): preencha na aba Environment do
+OpenBot Contas os `EMAIL_SMTP_*` e `EMAIL_FROM` (SMTP com TLS na 465) e `CONTAS_LOGIN_HOST` (o mesmo
+endereço do `CONTAS_HOST`) e faça Redeploy. O código passa a ir por e-mail e a API inteira fica nesse
+endereço; o app abre com `OPENBOT_AUTH_API_URL=https://<CONTAS_HOST>`. Sem SMTP, o servidor de contas
+recusa subir com `CONTAS_LOGIN_HOST` preenchido. Pare os OpenBots antes do Redeploy (o build usa ~5,5 GB).
+
 Não use `ports:` no compose do Contas: o redeploy recompila o servidor de contas, que precisa de ~5,5 GB
 de RAM e falha com os OpenBots rodando.
 
